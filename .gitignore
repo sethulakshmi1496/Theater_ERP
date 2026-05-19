@@ -86,5 +86,6 @@ android-sdk/db.sqlite3
 __pycache__/
 *.py[cod]
 .env
+.env.example
 media/
 venv/
