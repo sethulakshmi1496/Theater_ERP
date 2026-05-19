@@ -22,6 +22,7 @@ import AuditPage from './pages/AuditPage';
 import ScreenBuilderPage from './pages/ScreenBuilderPage';
 import ScreenLayoutPage from './pages/ScreenLayoutPage';
 import DCRPage from './pages/DCRPage';
+import AIIntelligenceCenter from './pages/AIIntelligenceCenter';
 import Layout from './components/Layout';
 
 const queryClient = new QueryClient({
@@ -83,6 +84,7 @@ export default function App() {
               <Route path="staff" element={<ProtectedRoute roles={['MD', 'ADMIN']}><StaffReportPage /></ProtectedRoute>} />
               <Route path="integrations/dcr" element={<ProtectedRoute roles={['MD', 'ADMIN']} module="DISTRICT_BRIDGE"><DCRPage /></ProtectedRoute>} />
               <Route path="reports" element={<ProtectedRoute roles={['MD', 'ADMIN']}><ReportsPage /></ProtectedRoute>} />
+              <Route path="ai-center" element={<ProtectedRoute roles={['MD', 'ADMIN']}><AIIntelligenceCenter /></ProtectedRoute>} />
               <Route path="audit" element={<ProtectedRoute roles={['MD', 'ADMIN']} module="AUDIT"><AuditPage /></ProtectedRoute>} />
               <Route path="builder" element={<ProtectedRoute roles={['MD', 'ADMIN']} module="SCREEN_BUILDER"><ScreenBuilderPage /></ProtectedRoute>} />
               <Route path="builder/screen/:screenId" element={<ProtectedRoute roles={['MD', 'ADMIN']} module="SCREEN_BUILDER"><ScreenLayoutPage /></ProtectedRoute>} />

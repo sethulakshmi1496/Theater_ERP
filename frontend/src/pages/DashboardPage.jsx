@@ -4,6 +4,7 @@ import { reportsAPI, screensAPI } from '../api';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import AIReportWidget from '../components/AIReportWidget';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -61,6 +62,10 @@ export default function DashboardPage() {
           />
           <button className="btn btn-secondary" onClick={handleExportSummary}>⬇️ Export Summary</button>
         </div>
+      </div>
+
+      <div style={{ marginBottom: '24px' }}>
+        <AIReportWidget moduleCode="EXECUTIVE" defaultPeriod="DAILY" />
       </div>
 
       {/* 2. ALERT CENTER SECTION */}

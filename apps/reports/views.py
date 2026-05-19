@@ -256,3 +256,20 @@ class ManagementSnapshotViewSet(TenantSafeMixin, viewsets.ModelViewSet):
             changed_by=self.request.user,
             changes={'period_type': period_type, 'comments': comments}
         )
+
+from .models import AIInsightReport, AIActionItem
+from .serializers import AIInsightReportSerializer, AIActionItemSerializer
+
+class AIInsightReportViewSet(TenantSafeMixin, viewsets.ModelViewSet):
+    """Viewset for Perplexity AI Generated Insights and Reports"""
+    queryset = AIInsightReport.objects.all().order_by('-created_at')
+    serializer_class = AIInsightReportSerializer
+    permission_classes = [IsMDOrAdmin]
+    filterset_fields = ['period_type', 'module', 'report_type', 'severity', 'is_acknowledged']
+
+class AIActionItemViewSet(TenantSafeMixin, viewsets.ModelViewSet):
+    """Viewset for tracking AI suggested action items"""
+    queryset = AIActionItem.objects.all().order_by('-created_at')
+    serializer_class = AIActionItemSerializer
+    permission_classes = [IsMDOrAdmin]
+    filterset_fields = ['status', 'assigned_to']

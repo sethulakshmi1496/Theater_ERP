@@ -24,6 +24,7 @@ const NAV_ITEMS = [
     { path: '/staff', icon: '👥', label: 'Staff Report', roles: ['MD', 'ADMIN'] },
   ]},
   { section: 'Intelligence', items: [
+    { path: '/ai-center', icon: '🧠', label: 'AI Intelligence', roles: ['MD', 'ADMIN'] },
     { path: '/reports', icon: '📈', label: 'P&L Reports', roles: ['MD', 'ADMIN'] },
     { path: '/audit', icon: '🛡️', label: 'Audit Shield', roles: ['MD', 'ADMIN'], module: 'AUDIT' },
     { path: '/builder', icon: '🏗️', label: 'Screen Builder', roles: ['MD', 'ADMIN'], module: 'SCREEN_BUILDER' },

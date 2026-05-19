@@ -4,6 +4,7 @@ import { reportsAPI } from '../api';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import AIReportWidget from '../components/AIReportWidget';
 
 export default function ReportsPage() {
   const now = new Date();
@@ -112,6 +113,10 @@ export default function ReportsPage() {
         <button className={`tab-btn ${activeTab === 'drilldown' ? 'active' : ''}`} onClick={() => setActiveTab('drilldown')}>🔍 Drill-down Analyzer</button>
         <button className={`tab-btn ${activeTab === 'variance' ? 'active' : ''}`} onClick={() => setActiveTab('variance')}>🎛️ Variance Drivers</button>
         <button className={`tab-btn ${activeTab === 'snapshots' ? 'active' : ''}`} onClick={() => setActiveTab('snapshots')}>💾 Snapshots Archival</button>
+      </div>
+
+      <div style={{ marginBottom: '24px' }}>
+        <AIReportWidget moduleCode="PNL" defaultPeriod="MONTHLY" />
       </div>
 
       {/* 1. PROFIT & LOSS SHEETS */}

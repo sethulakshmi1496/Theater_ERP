@@ -9,6 +9,9 @@ from .views import (
 
 router = DefaultRouter()
 router.register(r'pl/snapshots', ManagementSnapshotViewSet, basename='pl-snapshots')
+from .views import AIInsightReportViewSet, AIActionItemViewSet
+router.register(r'ai/reports', AIInsightReportViewSet, basename='ai-reports')
+router.register(r'ai/actions', AIActionItemViewSet, basename='ai-actions')
 
 urlpatterns = [
     path('', include(router.urls)),

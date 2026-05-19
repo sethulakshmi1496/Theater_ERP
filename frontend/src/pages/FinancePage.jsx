@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { financeAPI, screensAPI } from '../api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
+import AIReportWidget from '../components/AIReportWidget';
 
 export default function FinancePage() {
   const qc = useQueryClient();
@@ -98,6 +99,10 @@ export default function FinancePage() {
         <button className={`tab-btn ${activeTab === 'contracts' ? 'active' : ''}`} onClick={() => setActiveTab('contracts')}>📄 Film Contracts & Advances</button>
         <button className={`tab-btn ${activeTab === 'settlements' ? 'active' : ''}`} onClick={() => setActiveTab('settlements')}>🤝 Settlements Log</button>
         <button className={`tab-btn ${activeTab === 'statements' ? 'active' : ''}`} onClick={() => setActiveTab('statements')}>📊 Distributor Statements</button>
+      </div>
+
+      <div style={{ marginBottom: '24px' }}>
+        <AIReportWidget moduleCode="FINANCE" defaultPeriod="MONTHLY" />
       </div>
 
       {/* 1. DISTRIBUTOR MASTER */}

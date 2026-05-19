@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { revenueAPI } from '../api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
+import AIReportWidget from '../components/AIReportWidget';
 
 const TODAY = format(new Date(), 'yyyy-MM-dd');
 
@@ -179,6 +180,10 @@ export default function CanteenPage() {
         <button className={`tab-btn ${activeTab === 'stock-inward' ? 'active' : ''}`} onClick={() => setActiveTab('stock-inward')}>📦 Stock Inward Log</button>
         <button className={`tab-btn ${activeTab === 'wastage' ? 'active' : ''}`} onClick={() => setActiveTab('wastage')}>🗑️ Wastage & Spoilage Log</button>
         <button className={`tab-btn ${activeTab === 'reorder-alerts' ? 'active' : ''}`} onClick={() => setActiveTab('reorder-alerts')}>⚠️ Reorder Safety Alerts</button>
+      </div>
+
+      <div style={{ marginBottom: '24px' }}>
+        <AIReportWidget moduleCode="CAFE" defaultPeriod="DAILY" />
       </div>
 
       {/* 1. SALES & CONSUMPTION */}
