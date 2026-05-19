@@ -1,6 +1,39 @@
 from django.db import models
 from decimal import Decimal
 
+class DistrictImportJob(models.Model):
+    class Status(models.TextChoices):
+        UPLOADED = 'UPLOADED', 'Uploaded'
+        PARSING = 'PARSING', 'Parsing'
+        PARSED_SUCCESS = 'PARSED_SUCCESS', 'Parsed Success'
+        PARSED_PARTIAL = 'PARSED_PARTIAL', 'Parsed Partial'
+        FAILED = 'FAILED', 'Failed'
+
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.PROTECT)
+    source_file = models.FileField(upload_to='district_imports/')
+    source_file_name = models.CharField(max_length=255)
+    source_file_type = models.CharField(max_length=50) # PDF, CSV, EXCEL
+    source_period = models.CharField(max_length=100, blank=True)
+    uploaded_by = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True)
+    upload_timestamp = models.DateTimeField(auto_now_add=True)
+    
+    parser_template = models.CharField(max_length=100, default='default_v1')
+    parse_status = models.CharField(max_length=30, choices=Status.choices, default=Status.UPLOADED)
+    average_confidence = models.FloatField(default=0.0)
+    
+    review_status = models.CharField(max_length=30, default='PENDING')
+    approval_status = models.CharField(max_length=30, default='PENDING')
+    reprocess_count = models.IntegerField(default=0)
+    raw_archive_ref = models.CharField(max_length=500, blank=True)
+    audit_reference = models.CharField(max_length=100, blank=True)
+    
+    class Meta:
+        app_label = 'integrations'
+        ordering = ['-upload_timestamp']
+
+    def __str__(self):
+        return f"Import {self.id}: {self.source_file_name}"
+
 class DistrictDCRReport(models.Model):
     class Status(models.TextChoices):
         PARSED = 'PARSED', 'Parsed'
@@ -9,6 +42,8 @@ class DistrictDCRReport(models.Model):
         APPROVED = 'APPROVED', 'Approved'
         POSTED = 'POSTED', 'Posted'
 
+    import_job = models.ForeignKey(DistrictImportJob, on_delete=models.CASCADE, related_name='parsed_rows', null=True, blank=True)
+    
     # ── Tenant Foundation ──────────────────────────────────────────────────
     tenant = models.ForeignKey(
         'tenants.Tenant', on_delete=models.PROTECT,
@@ -20,6 +55,7 @@ class DistrictDCRReport(models.Model):
     movie_title = models.CharField(max_length=255)
     screen_name = models.CharField(max_length=100)
     show_time = models.TimeField(null=True, blank=True)
+    show_id = models.CharField(max_length=100, blank=True)
 
     # File and parsing
     raw_pdf = models.FileField(upload_to='dcr_pdfs/%Y/%m/', null=True, blank=True)
@@ -33,12 +69,16 @@ class DistrictDCRReport(models.Model):
     parsed_gross_revenue = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     parsed_occupancy = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Parsed occupancy percentage or count")
     
+    parsed_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    parsed_convenience_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     parsed_gst = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     parsed_etax = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     parsed_cess = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     parsed_nett_revenue = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     parsed_distributor_share = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     parsed_exhibitor_share = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    parsed_settlement_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    source_platform = models.CharField(max_length=50, default='District')
 
     # ── Mismatch and Reprocessing ──────────────────────────────────────────
     mismatch_flag = models.BooleanField(default=False)

@@ -24,6 +24,7 @@ import ScreenLayoutPage from './pages/ScreenLayoutPage';
 import DCRPage from './pages/DCRPage';
 import AIIntelligenceCenter from './pages/AIIntelligenceCenter';
 import PetpoojaIntegrationPage from './pages/PetpoojaIntegrationPage';
+import DistrictIntegrationPage from './pages/DistrictIntegrationPage';
 import Layout from './components/Layout';
 
 const queryClient = new QueryClient({
@@ -84,6 +85,7 @@ export default function App() {
               <Route path="finance" element={<ProtectedRoute roles={['MD', 'ADMIN']} module="FINANCE"><FinancePage /></ProtectedRoute>} />
               <Route path="staff" element={<ProtectedRoute roles={['MD', 'ADMIN']}><StaffReportPage /></ProtectedRoute>} />
               <Route path="integrations/dcr" element={<ProtectedRoute roles={['MD', 'ADMIN']} module="DISTRICT_BRIDGE"><DCRPage /></ProtectedRoute>} />
+              <Route path="integrations/district-config" element={<ProtectedRoute roles={['MD', 'ADMIN']}><DistrictIntegrationPage /></ProtectedRoute>} />
               <Route path="reports" element={<ProtectedRoute roles={['MD', 'ADMIN']}><ReportsPage /></ProtectedRoute>} />
               <Route path="ai-center" element={<ProtectedRoute roles={['MD', 'ADMIN']}><AIIntelligenceCenter /></ProtectedRoute>} />
               <Route path="integrations/petpooja" element={<ProtectedRoute roles={['MD', 'ADMIN']}><PetpoojaIntegrationPage /></ProtectedRoute>} />
