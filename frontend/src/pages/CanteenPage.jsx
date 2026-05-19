@@ -174,8 +174,9 @@ export default function CanteenPage() {
       </div>
 
       {/* COMPLIANCE NAVIGATION TABS */}
-      <div className="tab-container" style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border)', marginBottom: '24px', paddingBottom: '8px' }}>
+      <div className="tab-container" style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border)', marginBottom: '24px', paddingBottom: '8px', flexWrap: 'wrap' }}>
         <button className={`tab-btn ${activeTab === 'consumption' ? 'active' : ''}`} onClick={() => setActiveTab('consumption')}>🍿 Counter Sales & Consumption</button>
+        <button className={`tab-btn ${activeTab === 'petpooja' ? 'active' : ''}`} onClick={() => setActiveTab('petpooja')}>🧾 Petpooja Bill Register</button>
         <button className={`tab-btn ${activeTab === 'item-master' ? 'active' : ''}`} onClick={() => setActiveTab('item-master')}>🍔 Canteen Item Master</button>
         <button className={`tab-btn ${activeTab === 'stock-inward' ? 'active' : ''}`} onClick={() => setActiveTab('stock-inward')}>📦 Stock Inward Log</button>
         <button className={`tab-btn ${activeTab === 'wastage' ? 'active' : ''}`} onClick={() => setActiveTab('wastage')}>🗑️ Wastage & Spoilage Log</button>
@@ -220,7 +221,47 @@ export default function CanteenPage() {
         </div>
       )}
 
-      {/* 2. ITEM MASTER */}
+      {/* 2. PETPOOJA BILL REGISTER */}
+      {activeTab === 'petpooja' && (
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ margin: 0 }}>Imported Petpooja Bills</h3>
+            <span className="badge badge-success">Synced Recently</span>
+          </div>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Bill Date & Time</th>
+                <th>Bill No (Petpooja)</th>
+                <th>Shift / Counter</th>
+                <th>Payment Mode</th>
+                <th>Net Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{format(new Date(), 'dd MMM yyyy')} 14:30</td>
+                <td><strong>B-201</strong></td>
+                <td>Shift 1 - Main Counter</td>
+                <td><span className="badge badge-info">UPI</span></td>
+                <td><strong style={{ color: 'var(--success)' }}>₹441.00</strong></td>
+                <td><span className="badge badge-success">Synced to AEC</span></td>
+              </tr>
+              <tr>
+                <td>{format(new Date(), 'dd MMM yyyy')} 15:15</td>
+                <td><strong>B-202</strong></td>
+                <td>Shift 1 - VIP Lounge</td>
+                <td><span className="badge badge-info">CARD</span></td>
+                <td><strong style={{ color: 'var(--success)' }}>₹850.00</strong></td>
+                <td><span className="badge badge-success">Synced to AEC</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* 3. ITEM MASTER */}
       {activeTab === 'item-master' && (
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
           <table className="data-table">

@@ -184,3 +184,97 @@ class IntegrationConnector(models.Model):
                 masked[k] = v
         return masked
 
+class PetpoojaItemMap(models.Model):
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.PROTECT, related_name='petpooja_item_maps')
+    external_item_id = models.CharField(max_length=100)
+    item_name = models.CharField(max_length=200)
+    sku = models.CharField(max_length=100, blank=True)
+    category = models.CharField(max_length=100, blank=True)
+    sub_category = models.CharField(max_length=100, blank=True)
+    unit = models.CharField(max_length=50, blank=True)
+    selling_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    tax_rule = models.CharField(max_length=100, blank=True)
+    is_active = models.BooleanField(default=True)
+    in_stock = models.BooleanField(default=True)
+    
+    last_synced_at = models.DateTimeField(auto_now=True)
+    is_mapped = models.BooleanField(default=False)
+    aec_item = models.ForeignKey('revenue.CanteenItem', on_delete=models.SET_NULL, null=True, blank=True, related_name='petpooja_mappings')
+    
+    class Meta:
+        app_label = 'integrations'
+        unique_together = ('tenant', 'external_item_id')
+
+class PetpoojaSalesBill(models.Model):
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.PROTECT, related_name='petpooja_bills')
+    business_date = models.DateField()
+    bill_datetime = models.DateTimeField()
+    bill_number = models.CharField(max_length=100)
+    external_order_id = models.CharField(max_length=100)
+    shift = models.CharField(max_length=50, blank=True)
+    counter = models.CharField(max_length=100, blank=True)
+    
+    gross_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    tax_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    net_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    payment_mode = models.CharField(max_length=100, blank=True)
+    
+    is_cancelled = models.BooleanField(default=False)
+    sync_timestamp = models.DateTimeField(auto_now_add=True)
+    is_imported_to_aec = models.BooleanField(default=False)
+
+    class Meta:
+        app_label = 'integrations'
+        unique_together = ('tenant', 'external_order_id')
+
+class PetpoojaSalesLineItem(models.Model):
+    bill = models.ForeignKey(PetpoojaSalesBill, on_delete=models.CASCADE, related_name='line_items')
+    item_name = models.CharField(max_length=200)
+    external_item_id = models.CharField(max_length=100)
+    category = models.CharField(max_length=100, blank=True)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    gross_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    tax_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    net_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    class Meta:
+        app_label = 'integrations'
+
+class PetpoojaSyncJob(models.Model):
+    class SyncType(models.TextChoices):
+        ITEM_SYNC = 'ITEM_SYNC', 'Item Sync'
+        SALES_SYNC = 'SALES_SYNC', 'Sales Sync'
+    
+    class Status(models.TextChoices):
+        RUNNING = 'RUNNING', 'Running'
+        SUCCESS = 'SUCCESS', 'Success'
+        FAILED = 'FAILED', 'Failed'
+        PARTIAL = 'PARTIAL', 'Partial Success'
+
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.PROTECT, related_name='petpooja_sync_jobs')
+    sync_type = models.CharField(max_length=20, choices=SyncType.choices)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.RUNNING)
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    records_processed = models.IntegerField(default=0)
+    records_failed = models.IntegerField(default=0)
+    error_log = models.TextField(blank=True)
+    
+    class Meta:
+        app_label = 'integrations'
+
+class PetpoojaFailedSync(models.Model):
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.PROTECT)
+    job = models.ForeignKey(PetpoojaSyncJob, on_delete=models.CASCADE)
+    external_id = models.CharField(max_length=100)
+    record_type = models.CharField(max_length=50) # ITEM or BILL
+    payload = models.JSONField(default=dict)
+    error_reason = models.TextField()
+    is_resolved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        app_label = 'integrations'
+

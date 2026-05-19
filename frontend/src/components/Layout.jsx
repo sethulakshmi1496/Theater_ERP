@@ -21,6 +21,7 @@ const NAV_ITEMS = [
   { section: 'Finance & HR', items: [
     { path: '/finance', icon: '🎭', label: 'Film Finance', roles: ['MD', 'ADMIN'], module: 'FINANCE' },
     { path: '/integrations/dcr', icon: '📄', label: 'District DCR', roles: ['MD', 'ADMIN'], module: 'DISTRICT_BRIDGE' },
+    { path: '/integrations/petpooja', icon: '🔌', label: 'Petpooja POS', roles: ['MD', 'ADMIN'] },
     { path: '/staff', icon: '👥', label: 'Staff Report', roles: ['MD', 'ADMIN'] },
   ]},
   { section: 'Intelligence', items: [
