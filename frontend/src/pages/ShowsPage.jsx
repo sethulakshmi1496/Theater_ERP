@@ -9,7 +9,7 @@ export default function ShowsPage() {
   const dateScrollRef = useRef(null);
   const [showForm, setShowForm] = useState(false);
   const [movieForm, setMovieForm] = useState(false);
-  const [form, setForm] = useState({ screen: '', movie: '', show_date: '', start_time: '', end_time: '', duration_hours: 2.5, base_price: '' });
+  const [form, setForm] = useState({ screen: '', movie: '', show_date: '', start_time: '', end_time: '', duration_hours: 2.5, base_price: 0 });
   const [mForm, setMForm] = useState({ title: '', language: 'Tamil', genre: '', duration_minutes: 150, certificate: 'U/A', description: '' });
   
   const today = new Date();
@@ -208,7 +208,6 @@ export default function ShowsPage() {
                             position: 'relative'
                           }}>
                             {timeStr}
-                            <span style={{ fontSize: '9px', marginTop: '4px', opacity: 0.8 }}>₹{parseFloat(show.base_price).toFixed(0)}</span>
                             <button
                               onClick={(e) => { e.stopPropagation(); if(window.confirm('Delete this show?')) deleteShowMut.mutate(show.id); }}
                               style={{
@@ -284,7 +283,6 @@ export default function ShowsPage() {
                 <div className="form-group"><label className="form-label">Show Date</label><input type="date" className="form-input" value={form.show_date} onChange={e => setForm(p => ({ ...p, show_date: e.target.value }))} required /></div>
                 <div className="form-group"><label className="form-label">Start Time</label><input type="time" className="form-input" value={form.start_time} onChange={e => setForm(p => ({ ...p, start_time: e.target.value }))} required /></div>
                 <div className="form-group"><label className="form-label">End Time</label><input type="time" className="form-input" value={form.end_time} onChange={e => setForm(p => ({ ...p, end_time: e.target.value }))} required /></div>
-                <div className="form-group"><label className="form-label">Base Price (₹)</label><input type="number" step="0.01" className="form-input" value={form.base_price} onChange={e => setForm(p => ({ ...p, base_price: e.target.value }))} required /></div>
               </div>
               <div className="flex gap-12" style={{ justifyContent: 'flex-end' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>

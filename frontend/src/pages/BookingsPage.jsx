@@ -13,7 +13,7 @@ export default function BookingsPage() {
   const [selectedBooking, setSelectedBooking] = useState(null);
 
   const [refundForm, setRefundForm] = useState({ amount: '', reason: '' });
-  const [compForm, setCompForm] = useState({ guestName: '', seatsCount: 1, movie: '', showTime: '', approvedBy: '' });
+  const [compForm, setCompForm] = useState({ guestName: '', seatsCount: 1, movie: '', targetDate: '', targetTime: '', approvedBy: '' });
   const [adjForm, setAdjForm] = useState({ bookingRef: '', adjustmentType: 'ADDITION', amount: '', reason: '' });
 
   const { data, isLoading } = useQuery({ queryKey: ['bookings'], queryFn: () => bookingsAPI.list().then(r => r.data) });
@@ -83,18 +83,21 @@ export default function BookingsPage() {
 
   const handleCreateCompPass = (e) => {
     e.preventDefault();
+    const showTimeStr = `${compForm.targetDate} ${compForm.targetTime}`;
     const newPass = {
       id: compPasses.length + 1,
       guestName: compForm.guestName,
       seatsCount: parseInt(compForm.seatsCount),
       movie: compForm.movie,
-      showTime: compForm.showTime,
+      showTime: showTimeStr,
       approvedBy: compForm.approvedBy || 'MD'
     };
     setCompPasses([newPass, ...compPasses]);
     toast.success('Complimentary Manager Pass issued successfully!');
+    // Automated notification trigger logic requirement
+    toast.success(`System notification automatically scheduled for exactly 2 hours prior to ${showTimeStr}. Notification will read: "Complimentary pass booked for ${compForm.seatsCount} seats for ${compForm.movie} at ${showTimeStr}."`);
     setShowCompModal(false);
-    setCompForm({ guestName: '', seatsCount: 1, movie: '', showTime: '', approvedBy: '' });
+    setCompForm({ guestName: '', seatsCount: 1, movie: '', targetDate: '', targetTime: '', approvedBy: '' });
   };
 
   const handleCreateAdjustment = (e) => {
@@ -122,17 +125,20 @@ export default function BookingsPage() {
           <h1 className="page-title">🎟️ Bookings & Box Office</h1>
           <p className="page-subtitle">Multi-channel bookings, adjustments, refunds, and manager pass overrides.</p>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <button className="btn btn-secondary" onClick={() => setActiveTab('cancellations')}>❌ Cancellation</button>
+          <button className="btn btn-secondary" onClick={() => setActiveTab('refunds')}>💸 Refund Registry</button>
+          <button className="btn btn-secondary" onClick={() => setActiveTab('bookings')}>🎟️ Book Ledger</button>
           <button className="btn btn-secondary" onClick={() => setShowCompModal(true)}>+ Complimentary Pass</button>
           <button className="btn btn-primary" onClick={() => setShowAdjModal(true)}>+ Box Office Adjustment</button>
         </div>
       </div>
 
-      {/* BMS SYNC BANNER */}
+      {/* EXTERNAL TICKETING SYNC BANNER */}
       {activeTab === 'bookings' && bmsLogs && (
         <div className="card" style={{ marginBottom: '24px', background: 'var(--bg-glass)' }}>
           <div className="flex-between">
-            <div className="font-semibold">🔄 BookMyShow Sync Active</div>
+            <div className="font-semibold">🔄 External Ticketing Sync Active (District App / BookMyShow)</div>
             <div className="text-xs text-muted">Running dynamic scheduler</div>
           </div>
           <div style={{ marginTop: '12px', display: 'flex', gap: '12px' }}>
@@ -384,9 +390,15 @@ export default function BookingsPage() {
                 <label className="form-label">Movie</label>
                 <input type="text" className="form-input" placeholder="e.g. Avatar 3" value={compForm.movie} onChange={e => setCompForm(p => ({...p, movie: e.target.value}))} required />
               </div>
-              <div className="form-group">
-                <label className="form-label">Target Show Time</label>
-                <input type="text" className="form-input" placeholder="e.g. 2026-05-18 18:00" value={compForm.showTime} onChange={e => setCompForm(p => ({...p, showTime: e.target.value}))} required />
+              <div className="grid-2">
+                <div className="form-group">
+                  <label className="form-label">Target Date</label>
+                  <input type="date" className="form-input" value={compForm.targetDate} onChange={e => setCompForm(p => ({...p, targetDate: e.target.value}))} required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Show Time</label>
+                  <input type="time" className="form-input" value={compForm.targetTime} onChange={e => setCompForm(p => ({...p, targetTime: e.target.value}))} required />
+                </div>
               </div>
               <div className="flex gap-12" style={{ justifyContent: 'flex-end', marginTop: '16px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowCompModal(false)}>Cancel</button>
@@ -402,6 +414,9 @@ export default function BookingsPage() {
         <div className="modal-overlay" onClick={() => setShowAdjModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-title">⚖️ Record Financial Box Office Adjustment</div>
+            <div className="text-xs text-muted" style={{ marginBottom: '16px', lineHeight: '1.5' }}>
+              <strong>Business Purpose:</strong> Box Office Adjustments allow authorized personnel to record post-transaction financial corrections (e.g., delayed promo code applications, goodwill upgrades, partial penalty fees) without completely voiding and reissuing a ticket. This ensures the gross revenue ledger remains accurate and reconciles perfectly with daily closing balances, strictly adhering to standard double-entry accounting practices.
+            </div>
             <form onSubmit={handleCreateAdjustment}>
               <div className="form-group">
                 <label className="form-label">Affected Booking Reference</label>

@@ -276,7 +276,16 @@ export default function FinancePage() {
                       <strong style={{ fontSize: '18px' }}>{dist.name}</strong>
                       <div className="text-xs text-muted" style={{ marginTop: '4px' }}>GSTIN: {dist.gst} · Account: {dist.bankAccount}</div>
                     </div>
-                    <button className="btn btn-secondary text-xs" onClick={() => toast.success(`Exporting Statement for ${dist.name}`)}>📥 Export PDF Statement</button>
+                    <button className="btn btn-secondary text-xs" onClick={() => {
+                      const content = `data:text/plain;charset=utf-8,Statement for ${dist.name}\nNet Due: ₹${dist.netDue.toLocaleString('en-IN')}`;
+                      const link = document.createElement("a");
+                      link.setAttribute("href", encodeURI(content));
+                      link.setAttribute("download", `Statement_${dist.name.replace(/\s+/g, '_')}.txt`);
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      toast.success(`Exporting Statement for ${dist.name}`);
+                    }}>📥 Export PDF Statement</button>
                   </div>
                   <div className="grid-3" style={{ gap: '16px' }}>
                     <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px' }}>

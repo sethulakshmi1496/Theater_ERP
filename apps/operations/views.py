@@ -24,6 +24,26 @@ class UtilityMeterSerializer(serializers.ModelSerializer):
         model = UtilityMeter
         fields = '__all__'
 
+class ElectricityReadingSerializer(serializers.ModelSerializer):
+    entered_by_username = serializers.CharField(source='entered_by.username', read_only=True)
+    class Meta:
+        model = ElectricityReading
+        fields = [
+            'id', 'tenant', 'date', 'working_hours', 'screen_1_shows', 'screen_2_shows', 'tickets_sold',
+            'initial_reading', 'final_reading', 'total_consumption', 'unit_conversion',
+            'elec_charges', 'units_per_show', 'occupancy_percent', 'entered_by',
+            'entered_by_username', 'notes', 'created_at', 'updated_at'
+        ]
+        read_only_fields = [
+            'tenant', 'total_consumption', 'unit_conversion', 'elec_charges', 
+            'units_per_show', 'occupancy_percent', 'entered_by', 'created_at', 'updated_at'
+        ]
+        
+    def validate(self, data):
+        if data.get('final_reading', 0) < data.get('initial_reading', 0):
+            raise serializers.ValidationError({"final_reading": "Final reading cannot be less than initial reading."})
+        return data
+
 
 class UtilityConfigSerializer(serializers.ModelSerializer):
     class Meta:
@@ -210,6 +230,38 @@ class UtilityConfigViewSet(viewsets.ModelViewSet):
         if tenant:
             return qs.filter(meter__tenant=tenant)
         return qs
+
+class ElectricityReadingViewSet(TenantAuditMixin, viewsets.ModelViewSet):
+    queryset = ElectricityReading.objects.select_related('entered_by').order_by('-date')
+    serializer_class = ElectricityReadingSerializer
+    filterset_fields = ['date']
+    permission_classes = [IsStaffOrAbove]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        from apps.tenants.mixins import get_tenant_from_request
+        tenant = get_tenant_from_request(self.request)
+        if tenant:
+            return qs.filter(tenant=tenant)
+        return qs.none()
+
+    def perform_create(self, serializer):
+        from apps.tenants.mixins import get_tenant_from_request
+        tenant = get_tenant_from_request(self.request)
+        serializer.save(
+            tenant=tenant,
+            entered_by=self.request.user
+        )
+
+    @action(detail=False, methods=['get'], url_path='predictive-defaults')
+    def predictive_defaults(self, request):
+        tenant = getattr(request, 'tenant', None)
+        if not tenant:
+            return Response({})
+        prev = ElectricityReading.objects.filter(tenant=tenant).order_by('-date').first()
+        if prev:
+            return Response({'suggested_initial_reading': float(prev.final_reading), 'previous_date': str(prev.date)})
+        return Response({})
 
 
 class UtilityReadingViewSet(TenantAuditMixin, viewsets.ModelViewSet):

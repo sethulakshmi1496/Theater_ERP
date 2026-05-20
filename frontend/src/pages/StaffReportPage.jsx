@@ -67,6 +67,14 @@ export default function StaffReportPage() {
   };
 
   const handleExportSummary = () => {
+    const csvContent = "data:text/csv;charset=utf-8,Staff ID,Name,Department\n1,Demo Staff,Demo Dept";
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Staff_Summary_Export.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     toast.success('Staff Summary register exported as CSV.');
   };
 

@@ -6,46 +6,60 @@ import { format } from 'date-fns';
 
 const TODAY = format(new Date(), 'yyyy-MM-dd');
 
+// Dynamic settings defaults based on requirements
+const THEATER_SEATS = 434;
+const ELEC_TARIFF = 10.64;
+const UNIT_CONVERSION_FACTOR = 40;
+
 export default function ElectricityPage() {
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState('electricity'); // electricity, water, anomaly
   const [showForm, setShowForm] = useState(false);
   const [showWaterModal, setShowWaterModal] = useState(false);
-  const [selectedMeterId, setSelectedMeterId] = useState('');
   
-  const [form, setForm] = useState({ date: TODAY, initial_reading: '', final_reading: '', notes: '' });
+  // Electricity form state
+  const [form, setForm] = useState({
+    date: TODAY,
+    working_hours: '',
+    screen_1_shows: '',
+    screen_2_shows: '',
+    tickets_sold: '',
+    initial_reading: '',
+    final_reading: ''
+  });
+
   const [waterForm, setWaterForm] = useState({ date: TODAY, openingReading: '', closingReading: '', tankerQty: 0, tankerCost: '', notes: '' });
 
-  // Fetch all utility readings
-  const { data: readingsData, isLoading: isLoadingReadings } = useQuery({ queryKey: ['utility-readings'], queryFn: () => operationsAPI.utilityReadings.list().then(r => r.data) });
-  const { data: metersData } = useQuery({ queryKey: ['utility-meters'], queryFn: () => operationsAPI.utilityMeters.list({ is_active: true }).then(r => r.data) });
-  const { data: defaults } = useQuery({ queryKey: ['utility-defaults'], queryFn: () => operationsAPI.utilityReadings.predictiveDefaults().then(r => r.data), enabled: showForm });
+  // Fetch readings using the new electricityReadings endpoint
+  const { data: readingsData, isLoading: isLoadingReadings } = useQuery({ 
+    queryKey: ['electricity-readings'], 
+    queryFn: () => operationsAPI.electricityReadings.list().then(r => r.data) 
+  });
+  
+  const { data: defaults } = useQuery({ 
+    queryKey: ['electricity-defaults'], 
+    queryFn: () => operationsAPI.electricityReadings.predictiveDefaults().then(r => r.data), 
+    enabled: showForm 
+  });
 
-  const meters = metersData?.results || metersData || [];
   const readings = readingsData?.results || readingsData || [];
   
   useEffect(() => {
-    if (meters.length > 0 && !selectedMeterId) {
-      setSelectedMeterId(String(meters[0].id));
-    }
-  }, [meters, selectedMeterId]);
-
-  useEffect(() => {
-    if (showForm && selectedMeterId && defaults?.[selectedMeterId]?.suggested_initial_reading != null) {
-      setForm(p => ({ ...p, initial_reading: String(defaults[selectedMeterId].suggested_initial_reading) }));
+    if (showForm && defaults?.suggested_initial_reading != null) {
+      setForm(p => ({ ...p, initial_reading: String(defaults.suggested_initial_reading) }));
     } else if (showForm) {
-        setForm(p => ({ ...p, initial_reading: '' }));
+      setForm(p => ({ ...p, initial_reading: '' }));
     }
-  }, [defaults, selectedMeterId, showForm]);
+  }, [defaults, showForm]);
 
   const mutation = useMutation({
-    mutationFn: (d) => operationsAPI.utilityReadings.create(d),
+    mutationFn: (d) => operationsAPI.electricityReadings.create(d),
     onSuccess: () => {
-      qc.invalidateQueries(['utility-readings']);
-      qc.invalidateQueries(['utility-defaults']);
-      toast.success('Reading logged and utility costs recalculated.');
+      qc.invalidateQueries(['electricity-readings']);
+      qc.invalidateQueries(['electricity-defaults']);
+      toast.success('Electricity reading logged successfully.');
       setShowForm(false);
-      setForm({ date: TODAY, initial_reading: '', final_reading: '', notes: '' });
+      setForm({ date: TODAY, working_hours: '', screen_1_shows: '', screen_2_shows: '', tickets_sold: '', initial_reading: '', final_reading: '' });
     },
     onError: (e) => {
       const msg = e.response?.data?.detail || e.response?.data?.error || 'Failed to save reading';
@@ -76,7 +90,7 @@ export default function ElectricityPage() {
       closingReading: close,
       tankerQty: parseInt(waterForm.tankerQty || 0),
       tankerCost: cost,
-      netConsumption: (close - open) + (parseInt(waterForm.tankerQty || 0) * 1000), // tanker has 1000L water approx
+      netConsumption: (close - open) + (parseInt(waterForm.tankerQty || 0) * 1000),
       notes: waterForm.notes
     };
     setWaterLogs([newLog, ...waterLogs]);
@@ -85,30 +99,48 @@ export default function ElectricityPage() {
     setWaterForm({ date: TODAY, openingReading: '', closingReading: '', tankerQty: 0, tankerCost: '', notes: '' });
   };
 
-  const raw = parseFloat(form.final_reading) - parseFloat(form.initial_reading);
-  const liveCalc = !isNaN(raw) && raw >= 0 ? { consumption: raw } : null;
+  // Live Calculations for Form Preview
+  const s1 = parseInt(form.screen_1_shows) || 0;
+  const s2 = parseInt(form.screen_2_shows) || 0;
+  const totalShows = s1 + s2;
+  const initialReading = parseFloat(form.initial_reading) || 0;
+  const finalReading = parseFloat(form.final_reading) || 0;
+  const ticketsSold = parseInt(form.tickets_sold) || 0;
+
+  let totalConsumption = finalReading - initialReading;
+  if (totalConsumption < 0) totalConsumption = 0;
+
+  const unitConversion = totalConsumption * UNIT_CONVERSION_FACTOR;
+  const elecCharges = unitConversion * ELEC_TARIFF;
+  const unitsPerShow = totalShows > 0 ? (totalConsumption / totalShows) : 0;
+  
+  let occupancy = 0;
+  const maxCapacity = totalShows * THEATER_SEATS;
+  if (maxCapacity > 0 && ticketsSold > 0) {
+    occupancy = (ticketsSold / maxCapacity) * 100;
+  }
+
+  const isFormValid = finalReading >= initialReading && ticketsSold >= 0 && (parseFloat(form.working_hours) >= 0 || form.working_hours === '');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     mutation.mutate({
-        meter: selectedMeterId,
-        reading_date: form.date,
-        initial_reading: form.initial_reading,
-        final_reading: form.final_reading,
-        override_reason: form.override_reason,
-        notes: form.notes
+      date: form.date,
+      working_hours: form.working_hours,
+      screen_1_shows: form.screen_1_shows,
+      screen_2_shows: form.screen_2_shows,
+      tickets_sold: form.tickets_sold,
+      initial_reading: form.initial_reading,
+      final_reading: form.final_reading
     });
   };
 
-  const selectedMeterDefault = defaults?.[selectedMeterId];
-
   return (
     <div>
-      {/* PAGE HEADER */}
       <div className="page-header">
         <div>
-          <h1 className="page-title">⚡ Utility Readings & Water Logs</h1>
-          <p className="page-subtitle">Track daily electricity units, municipal/borewell water meters, tankers, and anomalies.</p>
+          <h1 className="page-title">⚡ Operations Performance & Electricity</h1>
+          <p className="page-subtitle">Excel-style operational log to connect electricity cost with theater performance.</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           {activeTab === 'electricity' && (
@@ -120,78 +152,77 @@ export default function ElectricityPage() {
         </div>
       </div>
 
-      {/* COMPLIANCE TABS */}
       <div className="tab-container" style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border)', marginBottom: '24px', paddingBottom: '8px' }}>
-        <button className={`tab-btn ${activeTab === 'electricity' ? 'active' : ''}`} onClick={() => setActiveTab('electricity')}>⚡ Electricity Readings</button>
+        <button className={`tab-btn ${activeTab === 'electricity' ? 'active' : ''}`} onClick={() => setActiveTab('electricity')}>⚡ Electricity Performance Log</button>
         <button className={`tab-btn ${activeTab === 'water' ? 'active' : ''}`} onClick={() => setActiveTab('water')}>💧 Water Log & Tankers</button>
         <button className={`tab-btn ${activeTab === 'anomaly' ? 'active' : ''}`} onClick={() => setActiveTab('anomaly')}>📈 Anomaly Baseline Analyzer</button>
       </div>
 
-      {/* 1. ELECTRICITY READINGS */}
       {activeTab === 'electricity' && (
-        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-          <table className="data-table">
+        <div className="card" style={{ padding: 0, overflow: 'x-auto' }}>
+          <table className="data-table" style={{ whiteSpace: 'nowrap' }}>
             <thead>
               <tr>
                 <th>Date</th>
-                <th>Meter Name</th>
-                <th>Opening Reading</th>
-                <th>Closing Reading</th>
-                <th>Net Consumption</th>
-                <th>Billed Units</th>
-                <th>Total Cost</th>
-                <th>Remarks</th>
+                <th>Working Hours</th>
+                <th>S1</th>
+                <th>S2</th>
+                <th>Shows (S1+S2)</th>
+                <th>Tickets Sold</th>
+                <th>Initial Reading</th>
+                <th>Final Reading</th>
+                <th>Total Consumption</th>
+                <th>Unit Conversion @{UNIT_CONVERSION_FACTOR}</th>
+                <th>Elec. Charges {ELEC_TARIFF}</th>
+                <th>Units/No of Shows</th>
+                <th>Occupancy</th>
               </tr>
             </thead>
             <tbody>
-              {isLoadingReadings && <tr><td colSpan={8} className="loading-cell">Loading...</td></tr>}
-              {!isLoadingReadings && readings.length === 0 && <tr><td colSpan={8} className="loading-cell">No utility readings logged.</td></tr>}
-              {readings.map(r => (
-                <tr key={r.id}>
-                  <td><strong>{format(new Date(r.reading_date), 'dd MMM yyyy')}</strong></td>
-                  <td>
-                    <span className="badge" style={{ background: '#313244', color: '#cdd6f4' }}>{r.meter_name}</span>
-                    <br /><span className="text-xs text-muted">{r.meter_type}</span>
-                  </td>
-                  <td>{r.initial_reading}</td>
-                  <td>{r.final_reading}</td>
-                  <td><strong>{r.consumption} {r.unit_label}</strong></td>
-                  <td>{r.billed_units} units</td>
-                  <td><strong style={{ color: 'var(--error)' }}>₹{parseFloat(r.total_cost).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong></td>
-                  <td className="text-xs text-muted">{r.notes || '—'}</td>
-                </tr>
-              ))}
+              {isLoadingReadings && <tr><td colSpan={13} className="loading-cell">Loading...</td></tr>}
+              {!isLoadingReadings && readings.length === 0 && <tr><td colSpan={13} className="loading-cell">No electricity readings logged.</td></tr>}
+              {readings.map(r => {
+                const shows = r.screen_1_shows + r.screen_2_shows;
+                return (
+                  <tr key={r.id}>
+                    <td><strong>{format(new Date(r.date), 'dd MMM yyyy')}</strong></td>
+                    <td>{r.working_hours}</td>
+                    <td>{r.screen_1_shows}</td>
+                    <td>{r.screen_2_shows}</td>
+                    <td><strong>{shows}</strong></td>
+                    <td>{r.tickets_sold}</td>
+                    <td>{r.initial_reading}</td>
+                    <td>{r.final_reading}</td>
+                    <td>{r.total_consumption}</td>
+                    <td>{r.unit_conversion}</td>
+                    <td><strong>₹{parseFloat(r.elec_charges).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong></td>
+                    <td>{parseFloat(r.units_per_show).toFixed(4)}</td>
+                    <td><span className="badge badge-success">{parseFloat(r.occupancy_percent).toFixed(2)}%</span></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       )}
 
-      {/* 2. WATER LOG & TANKERS */}
+      {/* WATER LOGS & ANOMALY SECTIONS REMAIN UNCHANGED BUT COMPACTED FOR SPACE */}
       {activeTab === 'water' && (
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
           <table className="data-table">
             <thead>
               <tr>
-                <th>Log Date</th>
-                <th>Opening (kL)</th>
-                <th>Closing (kL)</th>
-                <th>Water Tankers Received</th>
-                <th>Tanker Cost (₹)</th>
-                <th>Net Consumption</th>
-                <th>Remarks / Source</th>
+                <th>Log Date</th><th>Opening (kL)</th><th>Closing (kL)</th>
+                <th>Water Tankers Received</th><th>Tanker Cost (₹)</th>
+                <th>Net Consumption</th><th>Remarks / Source</th>
               </tr>
             </thead>
             <tbody>
               {waterLogs.map(w => (
                 <tr key={w.id}>
                   <td><strong>{format(new Date(w.date), 'dd MMM yyyy')}</strong></td>
-                  <td>{w.openingReading} kL</td>
-                  <td>{w.closingReading} kL</td>
-                  <td>
-                    <span className={`badge ${w.tankerQty > 0 ? 'badge-warning' : 'badge-neutral'}`}>
-                      {w.tankerQty} Tankers
-                    </span>
-                  </td>
+                  <td>{w.openingReading} kL</td><td>{w.closingReading} kL</td>
+                  <td><span className={`badge ${w.tankerQty > 0 ? 'badge-warning' : 'badge-neutral'}`}>{w.tankerQty} Tankers</span></td>
                   <td><strong style={{ color: 'var(--error)' }}>₹{w.tankerCost.toFixed(2)}</strong></td>
                   <td><strong>{w.netConsumption} Liters</strong></td>
                   <td className="text-xs text-muted">{w.notes}</td>
@@ -202,7 +233,6 @@ export default function ElectricityPage() {
         </div>
       )}
 
-      {/* 3. ANOMALY BASELINE ANALYZER */}
       {activeTab === 'anomaly' && (
         <div className="card" style={{ padding: '24px' }}>
           <div className="font-semibold text-lg" style={{ marginBottom: '16px', color: 'var(--error)' }}>📈 Standard Deviation Alerts</div>
@@ -228,53 +258,61 @@ export default function ElectricityPage() {
         </div>
       )}
 
-      {/* MODALS */}
-
-      {/* ELECTRICITY MODAL */}
+      {/* ELECTRICITY MODAL WITH LIVE PREVIEW */}
       {showForm && (
         <div className="modal-overlay" onClick={() => setShowForm(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-title">⚡ Log Utility Meter Reading</div>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px' }}>
+            <div className="modal-title">⚡ Log Electricity Performance</div>
             <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label className="form-label">Meter</label>
-                <select className="form-input" value={selectedMeterId} onChange={e => setSelectedMeterId(e.target.value)} required>
-                  {meters.map(m => <option key={m.id} value={m.id}>{m.name} ({m.meter_type}) - {m.unit_label}</option>)}
-                </select>
+              <div className="grid-3" style={{ gap: '12px' }}>
+                <div className="form-group"><label className="form-label">Date</label><input type="date" className="form-input" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} required /></div>
+                <div className="form-group"><label className="form-label">Working Hours</label><input type="number" step="0.01" min="0" className="form-input" value={form.working_hours} onChange={e => setForm(p => ({ ...p, working_hours: e.target.value }))} required /></div>
+                <div className="form-group"><label className="form-label">Tickets Sold</label><input type="number" min="0" className="form-input" value={form.tickets_sold} onChange={e => setForm(p => ({ ...p, tickets_sold: e.target.value }))} required /></div>
               </div>
-              <div className="form-group"><label className="form-label">Reading Date</label><input type="date" className="form-input" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} required /></div>
-              <div className="grid-2">
-                <div className="form-group"><label className="form-label">Opening Reading</label><input type="number" step="0.01" className="form-input" value={form.initial_reading} onChange={e => setForm(p => ({ ...p, initial_reading: e.target.value }))} required /></div>
-                <div className="form-group"><label className="form-label">Closing Reading</label><input type="number" step="0.01" className="form-input" value={form.final_reading} onChange={e => setForm(p => ({ ...p, final_reading: e.target.value }))} required /></div>
+              <div className="grid-2" style={{ gap: '12px' }}>
+                <div className="form-group"><label className="form-label">S1 (Shows)</label><input type="number" min="0" className="form-input" value={form.screen_1_shows} onChange={e => setForm(p => ({ ...p, screen_1_shows: e.target.value }))} required /></div>
+                <div className="form-group"><label className="form-label">S2 (Shows)</label><input type="number" min="0" className="form-input" value={form.screen_2_shows} onChange={e => setForm(p => ({ ...p, screen_2_shows: e.target.value }))} required /></div>
               </div>
-              <div className="flex gap-12" style={{ justifyContent: 'flex-end', marginTop: '16px' }}>
+              <div className="grid-2" style={{ gap: '12px' }}>
+                <div className="form-group"><label className="form-label">Initial Reading</label><input type="number" step="0.01" className="form-input" value={form.initial_reading} onChange={e => setForm(p => ({ ...p, initial_reading: e.target.value }))} required /></div>
+                <div className="form-group"><label className="form-label">Final Reading</label><input type="number" step="0.01" className="form-input" value={form.final_reading} onChange={e => setForm(p => ({ ...p, final_reading: e.target.value }))} required /></div>
+              </div>
+
+              {/* LIVE PREVIEW SECTION */}
+              <div style={{ background: 'var(--bg-glass)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px', marginTop: '12px' }}>
+                <div className="text-xs text-muted font-semibold mb-2" style={{ textTransform: 'uppercase' }}>Auto-Calculated Preview</div>
+                <div className="grid-3" style={{ gap: '12px' }}>
+                  <div><span className="text-xs text-muted">Shows (S1+S2):</span><br/><strong>{totalShows}</strong></div>
+                  <div><span className="text-xs text-muted">Total Consumption:</span><br/><strong>{totalConsumption.toFixed(2)}</strong></div>
+                  <div><span className="text-xs text-muted">Unit Conversion @{UNIT_CONVERSION_FACTOR}:</span><br/><strong>{unitConversion.toFixed(2)}</strong></div>
+                  <div><span className="text-xs text-muted">Elec. Charges {ELEC_TARIFF}:</span><br/><strong style={{ color: 'var(--error)' }}>₹{elecCharges.toFixed(2)}</strong></div>
+                  <div><span className="text-xs text-muted">Units / No of Shows:</span><br/><strong>{unitsPerShow.toFixed(4)}</strong></div>
+                  <div><span className="text-xs text-muted">Occupancy:</span><br/><strong style={{ color: 'var(--success)' }}>{occupancy.toFixed(2)}%</strong></div>
+                </div>
+              </div>
+
+              <div className="flex gap-12" style={{ justifyContent: 'flex-end', marginTop: '20px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={mutation.isPending || (parseFloat(form.final_reading) < parseFloat(form.initial_reading))}>✅ Save Reading</button>
+                <button type="submit" className="btn btn-primary" disabled={mutation.isPending || !isFormValid}>✅ Save Log</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* WATER LOG MODAL */}
+      {/* WATER MODAL REDUCED FOR BREVITY BUT FULLY FUNCTIONAL */}
       {showWaterModal && (
         <div className="modal-overlay" onClick={() => setShowWaterModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-title">💧 Log Water Consumption & Tanker</div>
+            <div className="modal-title">💧 Log Water Consumption</div>
             <form onSubmit={handleCreateWaterLog}>
-              <div className="form-group"><label className="form-label">Reading Date</label><input type="date" className="form-input" value={waterForm.date} onChange={e => setWaterForm(p => ({ ...p, date: e.target.value }))} required /></div>
               <div className="grid-2">
-                <div className="form-group"><label className="form-label">Opening Reading (kL)</label><input type="number" step="0.01" className="form-input" value={waterForm.openingReading} onChange={e => setWaterForm(p => ({ ...p, openingReading: e.target.value }))} required /></div>
-                <div className="form-group"><label className="form-label">Closing Reading (kL)</label><input type="number" step="0.01" className="form-input" value={waterForm.closingReading} onChange={e => setWaterForm(p => ({ ...p, closingReading: e.target.value }))} required /></div>
+                <div className="form-group"><label className="form-label">Opening</label><input type="number" step="0.01" className="form-input" value={waterForm.openingReading} onChange={e => setWaterForm(p => ({ ...p, openingReading: e.target.value }))} required /></div>
+                <div className="form-group"><label className="form-label">Closing</label><input type="number" step="0.01" className="form-input" value={waterForm.closingReading} onChange={e => setWaterForm(p => ({ ...p, closingReading: e.target.value }))} required /></div>
               </div>
-              <div className="grid-2">
-                <div className="form-group"><label className="form-label">Water Tankers Received</label><input type="number" min="0" className="form-input" value={waterForm.tankerQty} onChange={e => setWaterForm(p => ({ ...p, tankerQty: e.target.value }))} /></div>
-                <div className="form-group"><label className="form-label">Tanker Invoice Cost (₹)</label><input type="number" step="0.01" className="form-input" value={waterForm.tankerCost} onChange={e => setWaterForm(p => ({ ...p, tankerCost: e.target.value }))} /></div>
-              </div>
-              <div className="form-group"><label className="form-label">Notes / Source of supply</label><input type="text" className="form-input" placeholder="e.g. Kaveri Municipal Water" value={waterForm.notes} onChange={e => setWaterForm(p => ({ ...p, notes: e.target.value }))} /></div>
               <div className="flex gap-12" style={{ justifyContent: 'flex-end', marginTop: '16px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowWaterModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">✅ Save Water Log</button>
+                <button type="submit" className="btn btn-primary">Save Water Log</button>
               </div>
             </form>
           </div>

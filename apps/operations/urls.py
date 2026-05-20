@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
+    ElectricityReadingViewSet,
     UtilityMeterViewSet, UtilityConfigViewSet, UtilityReadingViewSet,
     GeneratorLogViewSet, LampLogViewSet, LampInventoryViewSet,
     AssetCategoryViewSet, AssetTemplateViewSet, TenantAssetViewSet, AssetLogViewSet,
@@ -10,6 +11,7 @@ from .views import (
 )
 
 router = DefaultRouter()
+router.register('electricity-readings', ElectricityReadingViewSet, basename='electricity-reading')
 router.register('utility-meters', UtilityMeterViewSet, basename='utility-meter')
 router.register('utility-configs', UtilityConfigViewSet, basename='utility-config')
 router.register('utility-readings', UtilityReadingViewSet, basename='utility-reading')

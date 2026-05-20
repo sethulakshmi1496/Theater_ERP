@@ -31,6 +31,11 @@ export const bookingsAPI = {
 };
 
 export const operationsAPI = {
+  electricityReadings: {
+    list: (params) => api.get('/operations/electricity-readings/', { params }),
+    create: (data) => api.post('/operations/electricity-readings/', data),
+    predictiveDefaults: () => api.get('/operations/electricity-readings/predictive-defaults/'),
+  },
   utilityMeters: {
     list: (params) => api.get('/operations/utility-meters/', { params }),
   },

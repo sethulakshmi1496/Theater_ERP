@@ -10,7 +10,17 @@ export default function GeneratorPage() {
   const [form, setForm] = useState({ date: TODAY, hours_run: '', consumption: '', diesel_added: '', diesel_rate: '', notes: '' });
   const { data, isLoading } = useQuery({ queryKey: ['generator'], queryFn: () => operationsAPI.generator.list().then(r => r.data) });
   const mutation = useMutation({
-    mutationFn: d => operationsAPI.generator.create(d),
+    mutationFn: d => {
+      const payload = {
+        date: d.date,
+        closing_hours: parseFloat(d.hours_run || 0),
+        consumed_qty: parseFloat(d.consumption || 0),
+        refill_qty: parseFloat(d.diesel_added || 0),
+        refill_cost: (parseFloat(d.diesel_added || 0) * parseFloat(d.diesel_rate || 0)),
+        notes: d.notes
+      };
+      return operationsAPI.generator.create(payload);
+    },
     onSuccess: () => { qc.invalidateQueries(['generator']); toast.success('Generator log saved!'); setShowForm(false); setForm({ date: TODAY, hours_run: '', consumption: '', diesel_added: '', diesel_rate: '', notes: '' }); },
     onError: e => toast.error(e.response?.data?.detail || 'Failed'),
   });

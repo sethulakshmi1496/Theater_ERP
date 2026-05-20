@@ -22,9 +22,15 @@ export default function DashboardPage() {
   });
 
   // Acknowledge alert helper
-  const [acknowledgedAlerts, setAcknowledgedAlerts] = useState({});
+  const [acknowledgedAlerts, setAcknowledgedAlerts] = useState(() => {
+    const saved = localStorage.getItem('acknowledgedAlerts');
+    return saved ? JSON.parse(saved) : {};
+  });
+
   const handleAcknowledgeAlert = (key) => {
-    setAcknowledgedAlerts(prev => ({ ...prev, [key]: true }));
+    const updated = { ...acknowledgedAlerts, [key]: true };
+    setAcknowledgedAlerts(updated);
+    localStorage.setItem('acknowledgedAlerts', JSON.stringify(updated));
     toast.success('Alert acknowledged successfully.');
   };
 
@@ -41,6 +47,14 @@ export default function DashboardPage() {
   const allAlerts = staticAlerts.filter(a => !acknowledgedAlerts[a.key]);
 
   const handleExportSummary = () => {
+    const csvContent = "data:text/csv;charset=utf-8,Metric,Value\nRevenue," + income + "\nExpenses," + expenses + "\nNet," + net;
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Executive_Summary_${filterDate}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     toast.success(`Executive dashboard summary for ${filterDate} exported as CSV.`);
   };
 
@@ -93,12 +107,6 @@ export default function DashboardPage() {
 
       {/* 3. CORE FIELD KPI CARDS */}
       <div className="grid-3" style={{ marginBottom: '24px', gap: '16px' }}>
-        {/* KPI: Business Date */}
-        <div className="kpi-card" onClick={() => toast.info(`Current Business Date: ${filterDate}`)} style={{ cursor: 'pointer' }}>
-          <div className="kpi-label">📅 Business Date</div>
-          <div className="kpi-value" style={{ fontSize: '22px', marginTop: '8px' }}>{format(new Date(filterDate), 'dd MMM yyyy')}</div>
-          <div className="text-xs text-muted mt-2">Active operating day</div>
-        </div>
 
         {/* KPI: Today Revenue */}
         <div className="kpi-card" style={{ cursor: 'pointer' }} onClick={() => navigate('/reports')}>
@@ -171,29 +179,6 @@ export default function DashboardPage() {
           <div className="kpi-value" style={{ color: allAlerts.length > 0 ? 'var(--error)' : 'var(--text-primary)' }}>{allAlerts.length} Active</div>
           <div className="text-xs text-muted mt-2">Unacknowledged system alerts</div>
         </div>
-      </div>
-
-      {/* 4. NAVIGATION / REDIRECTION QUICK-LINKS */}
-      <div className="card" style={{ marginBottom: '24px' }}>
-        <div className="font-semibold mb-4 text-md" style={{ color: 'var(--gold)' }}>🔗 Redirection Desk – Drill Into Source Modules</div>
-        <div className="grid-4" style={{ gap: '12px' }}>
-          <button className="btn btn-secondary" style={{ justifyContent: 'flex-start' }} onClick={() => navigate('/shows')}>🎬 Movies</button>
-          <button className="btn btn-secondary" style={{ justifyContent: 'flex-start' }} onClick={() => navigate('/bookings')}>🎟️ Bookings</button>
-          <button className="btn btn-secondary" style={{ justifyContent: 'flex-start' }} onClick={() => navigate('/canteen')}>🍿 Cafe Sales</button>
-          <button className="btn btn-secondary" style={{ justifyContent: 'flex-start' }} onClick={() => navigate('/electricity')}>⚡ Expense Register (Utilities)</button>
-          <button className="btn btn-secondary" style={{ justifyContent: 'flex-start' }} onClick={() => navigate('/reports')}>📈 P&L Reports</button>
-          <button className="btn btn-secondary" style={{ justifyContent: 'flex-start' }} onClick={() => navigate('/electricity')}>🚨 Alert Center</button>
-          <button className="btn btn-secondary" style={{ justifyContent: 'flex-start' }} onClick={() => navigate('/audit')}>🛡️ Audit Shield</button>
-          <button className="btn btn-secondary" style={{ justifyContent: 'flex-start' }} onClick={() => navigate('/integrations/dcr')}>📊 District DCR</button>
-        </div>
-      </div>
-
-      {/* 5. WORKFLOW STATEMENT SUMMARY */}
-      <div className="card" style={{ background: 'var(--bg-glass)', border: '1px solid var(--border)', padding: '16px' }}>
-        <h4 className="font-semibold" style={{ color: 'var(--gold)', margin: '0 0 8px 0' }}>🔄 Active Cinema Operations Workflow</h4>
-        <p className="text-xs text-muted" style={{ margin: 0, lineHeight: '1.6' }}>
-          The system aggregates daily feeds from <strong>Bookings</strong>, <strong>Concession Cafe</strong>, <strong>Utilities</strong>, <strong>Expense heads</strong>, <strong>HR</strong>, and <strong>District DCR</strong>. The Master Dashboard surfaces critical operational variance exceptions; you can click any KPI card or use the redirection links above to immediately drill down into the respective source modules.
-        </p>
       </div>
     </div>
   );

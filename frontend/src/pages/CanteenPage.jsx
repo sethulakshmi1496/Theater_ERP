@@ -402,10 +402,24 @@ export default function CanteenPage() {
                   {units.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                 </select>
               </div>
-              <div className="form-group"><label className="form-label">Item Name</label><input type="text" className="form-input" placeholder="e.g. Popcorn Large Tub" value={saleForm.item_name} onChange={e => setSaleForm(p => ({ ...p, item_name: e.target.value }))} required /></div>
+              <div className="form-group"><label className="form-label">Item Name</label>
+                <select className="form-input" value={saleForm.item_name} onChange={e => {
+                  const item = canteenItems.find(i => i.name === e.target.value);
+                  setSaleForm(p => ({
+                    ...p, 
+                    item_name: e.target.value,
+                    unit_price: item ? item.sellPrice : ''
+                  }));
+                }} required>
+                  <option value="">Select an Item</option>
+                  {canteenItems.map(item => (
+                    <option key={item.id} value={item.name}>{item.name}</option>
+                  ))}
+                </select>
+              </div>
               <div className="grid-2">
                 <div className="form-group"><label className="form-label">Quantity</label><input type="number" min="1" className="form-input" value={saleForm.quantity} onChange={e => setSaleForm(p => ({ ...p, quantity: e.target.value }))} required /></div>
-                <div className="form-group"><label className="form-label">Unit Price (₹)</label><input type="number" step="0.01" className="form-input" value={saleForm.unit_price} onChange={e => setSaleForm(p => ({ ...p, unit_price: e.target.value }))} required /></div>
+                <div className="form-group"><label className="form-label">Unit Price (₹)</label><input type="number" step="0.01" className="form-input" value={saleForm.unit_price} readOnly disabled style={{ background: 'var(--bg-glass)', opacity: 0.7 }} /></div>
               </div>
               <div className="flex gap-12" style={{ justifyContent: 'flex-end', marginTop: '16px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowSaleModal(false)}>Cancel</button>
@@ -491,16 +505,37 @@ export default function CanteenPage() {
             <form onSubmit={handleCreateWastage}>
               <div className="form-group">
                 <label className="form-label">Spoiled Item Name</label>
-                <input type="text" className="form-input" placeholder="e.g. Milk packages (curdled)" value={wastageForm.itemName} onChange={e => setWastageForm(p => ({...p, itemName: e.target.value}))} required />
+                <select className="form-input" value={wastageForm.itemName} onChange={e => {
+                  const item = canteenItems.find(i => i.name === e.target.value);
+                  const qty = parseFloat(wastageForm.quantity) || 0;
+                  setWastageForm(p => ({
+                    ...p, 
+                    itemName: e.target.value,
+                    cost: item ? (item.purchaseCost * qty).toFixed(2) : ''
+                  }));
+                }} required>
+                  <option value="">Select an Item</option>
+                  {canteenItems.map(item => (
+                    <option key={item.id} value={item.name}>{item.name}</option>
+                  ))}
+                </select>
               </div>
               <div className="grid-2">
                 <div className="form-group">
                   <label className="form-label">Quantity</label>
-                  <input type="number" className="form-input" placeholder="e.g. 10" value={wastageForm.quantity} onChange={e => setWastageForm(p => ({...p, quantity: e.target.value}))} required />
+                  <input type="number" className="form-input" placeholder="e.g. 10" value={wastageForm.quantity} onChange={e => {
+                    const qty = parseFloat(e.target.value) || 0;
+                    const item = canteenItems.find(i => i.name === wastageForm.itemName);
+                    setWastageForm(p => ({
+                      ...p, 
+                      quantity: e.target.value,
+                      cost: item ? (item.purchaseCost * qty).toFixed(2) : ''
+                    }));
+                  }} required />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Calculated Waste Cost (₹)</label>
-                  <input type="number" step="0.01" className="form-input" value={wastageForm.cost} onChange={e => setWastageForm(p => ({...p, cost: e.target.value}))} required />
+                  <input type="number" step="0.01" className="form-input" value={wastageForm.cost} readOnly disabled style={{ background: 'var(--bg-glass)', opacity: 0.7 }} />
                 </div>
               </div>
               <div className="form-group">

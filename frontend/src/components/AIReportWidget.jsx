@@ -20,6 +20,15 @@ export default function AIReportWidget({ moduleCode, defaultPeriod = 'DAILY' }) 
   const latestReport = reports?.results?.[0];
 
   const exportReport = () => {
+    if (!latestReport) return toast.error('No report to export');
+    const content = `AI Insight Report (${period})\n\nSummary:\n${latestReport.summary}\n\nBenchmarks:\n${latestReport.benchmark_notes || 'N/A'}`;
+    const encodedUri = encodeURI("data:text/plain;charset=utf-8," + content);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `AI_Insight_Report_${moduleCode}_${period}.txt`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     toast.success('Report exported successfully');
   };
 

@@ -31,6 +31,7 @@ class ElectricityReading(models.Model):
     date = models.DateField(unique=True)
     screen_1_shows = models.PositiveSmallIntegerField(default=0)
     screen_2_shows = models.PositiveSmallIntegerField(default=0)
+    working_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     tickets_sold = models.PositiveIntegerField(default=0)
     initial_reading = models.DecimalField(max_digits=10, decimal_places=2)
     final_reading = models.DecimalField(max_digits=10, decimal_places=2)
@@ -51,9 +52,9 @@ class ElectricityReading(models.Model):
         ordering = ['-date']
 
     def calculate(self):
-        from apps.settings_app.models import GlobalSetting
-        multiplier = GlobalSetting.get('UNIT_MULTIPLIER', Decimal('40'))
-        rate = GlobalSetting.get('ELEC_RATE', Decimal('10.64'))
+        from apps.settings_app.models import TenantSetting
+        multiplier = TenantSetting.get(self.tenant, 'UNIT_MULTIPLIER', Decimal('40'))
+        rate = TenantSetting.get(self.tenant, 'ELEC_RATE', Decimal('10.64'))
         total_shows = self.screen_1_shows + self.screen_2_shows
 
         self.total_consumption = self.final_reading - self.initial_reading

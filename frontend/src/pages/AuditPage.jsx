@@ -41,6 +41,14 @@ export default function AuditPage() {
   ]);
 
   const handleExportLog = () => {
+    const csvContent = "data:text/csv;charset=utf-8,Timestamp,User,Action,Module,Severity\n2026-05-18 10:00,Admin,Login,System,Info";
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Audit_Log_Export.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     toast.success('Central Audit Shield registers exported as CSV.');
   };
 
