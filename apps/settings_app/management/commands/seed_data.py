@@ -1,21 +1,35 @@
 """AEC Cinemas – Database seeder with initial data"""
 
 from django.core.management.base import BaseCommand
-from apps.settings_app.models import GlobalSetting
+from apps.settings_app.models import TenantSetting
 from apps.screens.models import Screen, SeatCategory, Seat
 from apps.accounts.models import User
+from apps.tenants.models import Tenant
 
 
 class Command(BaseCommand):
     help = 'Seed initial AEC Cinemas data'
 
     def handle(self, *args, **options):
-        self.seed_settings()
-        self.seed_screens()
-        self.seed_users()
+        tenant = Tenant.objects.filter(slug='aec-cinemas').first()
+        if not tenant:
+            tenant = Tenant.objects.create(
+                name='AEC Cinemas',
+                slug='aec-cinemas',
+                is_active=True,
+                plan='pro',
+                timezone='Asia/Kolkata',
+                currency='INR',
+                working_days_per_month=26,
+            )
+            self.stdout.write(f'Created tenant: {tenant.name}')
+
+        self.seed_settings(tenant)
+        self.seed_screens(tenant)
+        self.seed_users(tenant)
         self.stdout.write(self.style.SUCCESS('✅ Database seeded successfully!'))
 
-    def seed_settings(self):
+    def seed_settings(self, tenant):
         settings = [
             ('ELEC_RATE', '10.64', 'Electricity charge per unit (₹)'),
             ('UNIT_MULTIPLIER', '40', 'Unit conversion multiplier for electricity readings'),
@@ -25,17 +39,22 @@ class Command(BaseCommand):
             ('BMS_SYNC_INTERVAL_MINUTES', '30', 'How often to sync BookMyShow bookings'),
         ]
         for key, value, desc in settings:
-            obj, created = GlobalSetting.objects.get_or_create(key=key, defaults={'value': value, 'description': desc})
+            obj, created = TenantSetting.objects.get_or_create(
+                tenant=tenant,
+                key=key,
+                defaults={'value': value, 'description': desc}
+            )
             if created:
                 self.stdout.write(f'  Created setting: {key}={value}')
 
-    def seed_screens(self):
+    def seed_screens(self, tenant):
         screens_data = [
             {'name': 'Screen 1', 'total_seats': 200, 'lamp_balance': 3000},
             {'name': 'Screen 2', 'total_seats': 150, 'lamp_balance': 3000},
         ]
         for s_data in screens_data:
             screen, created = Screen.objects.get_or_create(
+                tenant=tenant,
                 name=s_data['name'],
                 defaults={'total_seats': s_data['total_seats'], 'lamp_balance': s_data['lamp_balance']}
             )
@@ -49,7 +68,7 @@ class Command(BaseCommand):
                 ]
                 for cat_name, price, color in cats:
                     SeatCategory.objects.create(
-                        screen=screen, name=cat_name, price=price, color_code=color
+                        tenant=tenant, screen=screen, name=cat_name, price=price, color_code=color
                     )
                 # Generate seats (rows A-J, 20 seats each for Screen 1)
                 cat_list = list(screen.categories.all())
@@ -64,7 +83,7 @@ class Command(BaseCommand):
                 screen.save()
                 self.stdout.write(f'    Created {screen.total_seats} seats for {screen.name}')
 
-    def seed_users(self):
+    def seed_users(self, tenant):
         users = [
             ('md@aeccinemas.com', 'AEC@md2026', 'Managing Director', 'MD'),
             ('admin@aeccinemas.com', 'AEC@admin2026', 'Admin Accountant', 'ADMIN'),
@@ -72,5 +91,11 @@ class Command(BaseCommand):
         ]
         for email, password, name, role in users:
             if not User.objects.filter(email=email).exists():
-                User.objects.create_user(email=email, password=password, full_name=name, role=role)
+                User.objects.create_user(
+                    email=email,
+                    password=password,
+                    full_name=name,
+                    role=role,
+                    tenant=tenant
+                )
                 self.stdout.write(f'  Created user: {email} [{role}]')
