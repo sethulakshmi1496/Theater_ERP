@@ -1,8 +1,3 @@
-databases:
-  - name: theater-erp-db
-    databaseName: aec_cinemas_db
-    plan: free
-
 services:
   # Key-Value (Valkey/Redis) instance for Celery
   - type: keyvalue
@@ -23,9 +18,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        fromDatabase:
-          name: theater-erp-db
-          property: connectionString
+        sync: false # Set manually in the dashboard to your Neon database URL (e.g. postgresql://user:password@host/dbname)
       - key: REDIS_URL
         fromService:
           type: keyvalue
@@ -50,9 +43,7 @@ services:
           name: theater-erp-backend
           envVarKey: SECRET_KEY
       - key: DATABASE_URL
-        fromDatabase:
-          name: theater-erp-db
-          property: connectionString
+        sync: false # Set manually in the dashboard to your Neon database URL
       - key: REDIS_URL
         fromService:
           type: keyvalue
@@ -75,9 +66,7 @@ services:
           name: theater-erp-backend
           envVarKey: SECRET_KEY
       - key: DATABASE_URL
-        fromDatabase:
-          name: theater-erp-db
-          property: connectionString
+        sync: false # Set manually in the dashboard to your Neon database URL
       - key: REDIS_URL
         fromService:
           type: keyvalue
