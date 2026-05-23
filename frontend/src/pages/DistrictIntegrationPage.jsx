@@ -89,7 +89,7 @@ export default function DistrictIntegrationPage() {
         <h3 style={{ marginTop: 0, color: 'var(--gold)' }}>Workflow Rules & Governance</h3>
         <ul style={{ paddingLeft: '20px', lineHeight: '1.6', fontSize: '14px', color: 'var(--text-secondary)' }}>
           <li><strong>Raw Archive First:</strong> Every source file uploaded via the DCR Page is permanently archived for traceability.</li>
-          <li><strong>Approval Required:</strong> Parsed data is held in isolation until human approval. Unapproved data will not affect Film Finance.</li>
+          <li><strong>Approval Required:</strong> Parsed data is held in isolation until human approval. Unapproved data will not affect Distributor Finance.</li>
           <li><strong>Reconciliation:</strong> The parser flags mismatches automatically against AEC schedule expectations.</li>
           <li><strong>Reprocessing:</strong> If the District report format changes, update the Parser Version above, and retry failed jobs in the DCR view.</li>
         </ul>

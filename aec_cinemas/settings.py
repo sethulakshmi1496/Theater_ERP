@@ -59,6 +59,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -184,12 +185,19 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# CORS – Allow React dev server
+# CORS – Allow React dev server and production frontend domain
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost:3000',
     'http://127.0.0.1:5173',
 ]
+_cors_origins = os.environ.get('CORS_ALLOWED_ORIGINS')
+if _cors_origins:
+    for _origin in _cors_origins.split(','):
+        _o = _origin.strip()
+        if _o:
+            CORS_ALLOWED_ORIGINS.append(_o)
+
 CORS_ALLOW_CREDENTIALS = True
 
 # Celery
@@ -197,6 +205,16 @@ CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_TIMEZONE = 'Asia/Kolkata'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+# WhiteNoise storage settings for Django 4.2+ / 5.x / 6.x
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # ─── BUSINESS CONSTANTS ──────────────────────────────────────────────────────
 THEATER_TOTAL_SEATS = 434          # Total capacity for occupancy formula

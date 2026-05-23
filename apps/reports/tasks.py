@@ -34,7 +34,7 @@ def generate_daily_reports():
             ("CAFE", "Cafe Sales Daily Summary", "Analyze cafe sales, inventory alerts, and fast-moving items."),
             ("UTILITY", "Utility Daily Summary", "Analyze utility consumption, power tariffs, and generator usage."),
             ("MAINTENANCE", "Maintenance Daily Alert", "Analyze critical maintenance items and asset health."),
-            ("FINANCE", "Film Finance Daily Risk Summary", "Provide daily mismatch or settlement risk notes."),
+            ("FINANCE", "Distributor Finance Daily Risk Summary", "Provide daily mismatch or settlement risk notes."),
             ("EXPENSE", "Expense Daily Alert Summary", "Provide daily overspend alerts.")
         ]
         
@@ -74,7 +74,7 @@ def generate_monthly_reports():
         )
         
         modules_to_report = [
-            ("FINANCE", "Film Finance Monthly Settlement Review", "Analyze settlement health, distributor shares, and mismatches."),
+            ("FINANCE", "Distributor Finance Monthly Settlement Review", "Analyze settlement health, distributor shares, and mismatches."),
             ("EXPENSE", "Expense Monthly Variance Review", "Analyze cost control, overspends, and vendor payments."),
             ("STAFF", "Staff Monthly Review", "Analyze attendance patterns, staffing efficiency, and HR logs."),
             ("UTILITY", "Utility Monthly Cost Review", "Analyze monthly cost and consumption pattern analysis."),
@@ -118,7 +118,7 @@ def generate_yearly_reports():
         )
         
         modules_to_report = [
-            ("FINANCE", "Film Finance Yearly Distributor Review", "Provide yearly distributor and contract performance analysis."),
+            ("FINANCE", "Distributor Finance Yearly Distributor Review", "Provide yearly distributor and contract performance analysis."),
             ("EXPENSE", "Expense Yearly Cost-Discipline Review", "Provide yearly profitability, variance, and efficiency commentary."),
             ("UTILITY", "Utility Yearly Efficiency Review", "Provide yearly efficiency and savings recommendations."),
             ("BOOKINGS", "Booking Yearly Trend Review", "Provide yearly movie/release pattern analysis with improvement suggestions.")

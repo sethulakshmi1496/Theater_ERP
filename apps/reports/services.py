@@ -477,7 +477,7 @@ class PLReportEngine:
             if tenant: qs = qs.filter(tenant=tenant)
             for item in qs.select_related('show__movie', 'distributor')[:100]:
                 results.append({
-                    'source': 'Film Finance',
+                    'source': 'Distributor Finance',
                     'record_id': item.id,
                     'date': str(item.show.show_date),
                     'reference': item.distributor.name,

@@ -1,4 +1,4 @@
-import api from './client';
+import api, { API_BASE } from './client';
 
 export const authAPI = {
   login: (email, password) => api.post('/auth/login/', { email, password }),
@@ -111,8 +111,8 @@ export const reportsAPI = {
   dailyPL: (date) => api.get('/reports/pl/daily/', { params: { date } }),
   monthlyPL: (month, year) => api.get('/reports/pl/monthly/', { params: { month, year } }),
   alerts: () => api.get('/reports/alerts/'),
-  exportDailyCSV: (date) => `${import.meta.env.VITE_API_BASE || 'http://localhost:8000/api'}/reports/export/daily/?date=${date}`,
-  exportMonthlyCSV: (month, year) => `${import.meta.env.VITE_API_BASE || 'http://localhost:8000/api'}/reports/export/monthly/?month=${month}&year=${year}`,
+  exportDailyCSV: (date) => `${API_BASE}/reports/export/daily/?date=${date}`,
+  exportMonthlyCSV: (month, year) => `${API_BASE}/reports/export/monthly/?month=${month}&year=${year}`,
 };
 
 export const settingsAPI = {

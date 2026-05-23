@@ -242,12 +242,12 @@ class DistrictDCRReportViewSet(viewsets.ModelViewSet):
             'raw_archive_link': report.raw_archive_link
         })
 
-    # ── Action: Push Approved Data to Film Finance ───────────────────────────
+    # ── Action: Push Approved Data to Distributor Finance ─────────────────────
     @action(detail=True, methods=['post'], url_path='post-to-finance')
     def post_to_finance(self, request, pk=None):
         report = self.get_object()
         if report.status != DistrictDCRReport.Status.APPROVED:
-            return Response({'error': 'Report must be approved before posting to Film Finance.'}, status=400)
+            return Response({'error': 'Report must be approved before posting to Distributor Finance.'}, status=400)
         
         report.status = DistrictDCRReport.Status.POSTED
         report.posting_status = 'FILM_FINANCE_PUSHED'
@@ -256,7 +256,7 @@ class DistrictDCRReportViewSet(viewsets.ModelViewSet):
         # Connect live settlement entry
         # Here we mock the integration to Settlements registry
         return Response({
-            'status': 'Film Finance successfully synced.',
+            'status': 'Distributor Finance successfully synced.',
             'posting_status': report.posting_status,
             'nett_revenue': float(report.parsed_nett_revenue),
             'distributor_share': float(report.parsed_distributor_share)

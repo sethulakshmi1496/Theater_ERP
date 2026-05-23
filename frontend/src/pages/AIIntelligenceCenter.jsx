@@ -1,22 +1,21 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '../api/client';
 import toast from 'react-hot-toast';
 
 export default function AIIntelligenceCenter() {
   const [activeTab, setActiveTab] = useState('daily'); // daily, monthly, yearly, archive, actions
-  const token = localStorage.getItem('access_token');
 
   const { data: reports, isLoading } = useQuery({
     queryKey: ['ai-reports-center', activeTab],
     queryFn: async () => {
-      let url = `http://localhost:8000/api/reports/ai/reports/`;
+      let url = `/reports/ai/reports/`;
       if (activeTab === 'daily') url += `?period_type=DAILY`;
       else if (activeTab === 'monthly') url += `?period_type=MONTHLY`;
       else if (activeTab === 'yearly') url += `?period_type=YEARLY`;
       
       if (activeTab !== 'actions') {
-        const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+        const res = await api.get(url);
         return res.data;
       }
       return null;
@@ -26,9 +25,7 @@ export default function AIIntelligenceCenter() {
   const { data: actions, isLoading: actsLoading } = useQuery({
     queryKey: ['ai-actions'],
     queryFn: async () => {
-      const res = await axios.get(`http://localhost:8000/api/reports/ai/actions/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.get(`/reports/ai/actions/`);
       return res.data;
     },
     enabled: activeTab === 'actions'
@@ -36,9 +33,7 @@ export default function AIIntelligenceCenter() {
 
   const handleActionStatus = async (id, status) => {
     try {
-      await axios.patch(`http://localhost:8000/api/reports/ai/actions/${id}/`, { status }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.patch(`/reports/ai/actions/${id}/`, { status });
       toast.success(`Action marked as ${status}`);
     } catch (e) {
       toast.error('Failed to update action');

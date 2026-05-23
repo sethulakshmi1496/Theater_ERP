@@ -77,7 +77,7 @@ export default function FinancePage() {
       {/* PAGE HEADER */}
       <div className="page-header">
         <div>
-          <h1 className="page-title">🎭 Film Finance & Distributor Desk</h1>
+          <h1 className="page-title">🎭 Distributor Finance & Distributor Desk</h1>
           <p className="page-subtitle">Distributor profiles, contracts, period settlements, and statements.</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>

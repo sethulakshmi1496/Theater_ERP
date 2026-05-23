@@ -92,7 +92,7 @@ class DistrictDCRReport(models.Model):
     reprocess_count = models.IntegerField(default=0)
     posting_status = models.CharField(
         max_length=30,
-        choices=[('DRAFT', 'Draft'), ('POSTED', 'Posted'), ('FILM_FINANCE_PUSHED', 'Film Finance Pushed')],
+        choices=[('DRAFT', 'Draft'), ('POSTED', 'Posted'), ('FILM_FINANCE_PUSHED', 'Distributor Finance Pushed')],
         default='DRAFT'
     )
 

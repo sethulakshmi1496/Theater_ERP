@@ -43,7 +43,7 @@ class AIInsightReport(models.Model):
         ('ASSETS', 'Asset Registry'),
         ('MAINTENANCE', 'Maintenance Desk'),
         ('PARKING', 'Parking Analytics'),
-        ('FINANCE', 'Film Finance'),
+        ('FINANCE', 'Distributor Finance'),
         ('DCR', 'District DCR'),
         ('EXPENSE', 'Expense Register'),
         ('STAFF', 'Staff Report / HR Sync'),

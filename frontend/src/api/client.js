@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api';
+let API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api';
+if (API_BASE && !API_BASE.endsWith('/api') && !API_BASE.endsWith('/api/')) {
+  API_BASE = API_BASE.replace(/\/$/, '') + '/api';
+}
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -36,4 +39,5 @@ api.interceptors.response.use(
   }
 );
 
+export { API_BASE };
 export default api;

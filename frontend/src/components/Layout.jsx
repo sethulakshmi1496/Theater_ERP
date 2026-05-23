@@ -9,7 +9,6 @@ const NAV_ITEMS = [
   { section: 'Revenue', items: [
     { path: '/shows', icon: '🎬', label: 'Movies' },
     { path: '/bookings', icon: '🎟️', label: 'Bookings' },
-    { path: '/canteen', icon: '🍿', label: 'Cafe Sales', module: 'CAFE' },
     { path: '/advertising', icon: '📺', label: 'Advertising', module: 'ADVERTISING' },
   ]},
   { section: 'Operations', items: [
@@ -19,7 +18,7 @@ const NAV_ITEMS = [
     { path: '/assets', icon: '🏗️', label: 'Asset Registry' },
   ]},
   { section: 'Finance & HR', items: [
-    { path: '/finance', icon: '🎭', label: 'Film Finance', roles: ['MD', 'ADMIN'], module: 'FINANCE' },
+    { path: '/finance', icon: '🎭', label: 'Distributor Finance', roles: ['MD', 'ADMIN'], module: 'FINANCE' },
     { path: '/integrations/district-config', icon: '⚙️', label: 'District Setup', roles: ['MD', 'ADMIN'] },
     { path: '/integrations/dcr', icon: '📄', label: 'District DCR', roles: ['MD', 'ADMIN'], module: 'DISTRICT_BRIDGE' },
     { path: '/integrations/petpooja', icon: '🔌', label: 'Petpooja POS', roles: ['MD', 'ADMIN'] },
@@ -31,6 +30,9 @@ const NAV_ITEMS = [
     { path: '/audit', icon: '🛡️', label: 'Audit Shield', roles: ['MD', 'ADMIN'], module: 'AUDIT' },
     { path: '/builder', icon: '🏗️', label: 'Screen Builder', roles: ['MD', 'ADMIN'], module: 'SCREEN_BUILDER' },
     { path: '/settings', icon: '⚙️', label: 'Settings', roles: ['MD'] },
+  ]},
+  { section: 'Cafe', items: [
+    { path: '/canteen', icon: '🍿', label: 'Cafe Sales', module: 'CAFE' },
   ]},
 ];
 

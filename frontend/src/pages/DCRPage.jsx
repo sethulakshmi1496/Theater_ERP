@@ -26,7 +26,7 @@ export default function DCRPage() {
       reviewerNote: 'Data matches ticketing feed exactly.',
       rawArchiveLink: 'https://aec-archives.s3.amazonaws.com/dcr/dcr_2026_05_18_screen1.pdf',
       reprocessCount: 0,
-      postingStatus: 'Posted to Film Finance'
+      postingStatus: 'Posted to Distributor Finance'
     },
     {
       id: 2,
@@ -100,8 +100,8 @@ export default function DCRPage() {
   };
 
   const handlePushToFinance = (id) => {
-    setDcrs(dcrs.map(d => d.id === id ? { ...d, postingStatus: 'Posted to Film Finance' } : d));
-    toast.success('DCR data pushed into Settlements and Film Finance ledgers successfully.');
+    setDcrs(dcrs.map(d => d.id === id ? { ...d, postingStatus: 'Posted to Distributor Finance' } : d));
+    toast.success('DCR data pushed into Settlements and Distributor Finance ledgers successfully.');
   };
 
   const handleArchiveRaw = (link) => {
@@ -193,7 +193,7 @@ export default function DCRPage() {
                     {d.reviewStatus !== 'Approved' && (
                       <button className="btn btn-success btn-xs" onClick={() => handleApproveData(d.id)}>Approve</button>
                     )}
-                    {d.reviewStatus === 'Approved' && d.postingStatus !== 'Posted to Film Finance' && (
+                    {d.reviewStatus === 'Approved' && d.postingStatus !== 'Posted to Distributor Finance' && (
                       <button className="btn btn-primary btn-xs" onClick={() => handlePushToFinance(d.id)}>Push Finance</button>
                     )}
                   </div>

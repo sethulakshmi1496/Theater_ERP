@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '../api/client';
 import toast from 'react-hot-toast';
 
 export default function AIReportWidget({ moduleCode, defaultPeriod = 'DAILY' }) {
   const [period, setPeriod] = useState(defaultPeriod);
-  const token = localStorage.getItem('access_token');
   
   const { data: reports, isLoading } = useQuery({
     queryKey: ['ai-reports', moduleCode, period],
     queryFn: async () => {
-      const res = await axios.get(`http://localhost:8000/api/reports/ai/reports/?module=${moduleCode}&period_type=${period}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.get(`/reports/ai/reports/?module=${moduleCode}&period_type=${period}`);
       return res.data;
     }
   });
