@@ -112,7 +112,6 @@ if DATABASE_URL:
                 'PORT': _port or '5432',
                 'OPTIONS': {
                     'sslmode': 'require',
-                    'options': '-c default_transaction_isolation=serializable',
                 },
                 'CONN_MAX_AGE': 60,          # Connection pooling for Neon
             }
@@ -130,7 +129,6 @@ else:
             'PORT': os.environ.get('DB_PORT', '5432'),
             'OPTIONS': {
                 'sslmode': os.environ.get('DB_SSLMODE', 'prefer'),
-                'options': '-c default_transaction_isolation=serializable',
             },
             'CONN_MAX_AGE': 60,
         }
