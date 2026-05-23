@@ -1,10 +1,4 @@
 services:
-  # Key-Value (Valkey/Redis) instance for Celery
-  - type: keyvalue
-    name: theater-erp-redis
-    plan: free
-    ipAllowList: [] # Only allow internal traffic
-
   # Django Backend API Web Service (Includes Celery Worker & Beat in background)
   - type: web
     name: theater-erp-backend
@@ -20,10 +14,7 @@ services:
       - key: DATABASE_URL
         sync: false # Set manually in the dashboard to your Neon database URL
       - key: REDIS_URL
-        fromService:
-          type: keyvalue
-          name: theater-erp-redis
-          property: connectionString
+        sync: false # Set manually in the dashboard to your existing Redis URL (e.g. redis://...)
       - key: CORS_ALLOWED_ORIGINS
         sync: false # Set manually in the dashboard to the frontend URL (e.g. https://theater-erp-frontend.onrender.com)
 
